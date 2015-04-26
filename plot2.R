@@ -1,7 +1,18 @@
-power <- read.table("household_power_consumption.txt", header=TRUE, sep=";", stringsAsFactors=FALSE)
-power_subset <- power[power$Date %in% c("1/2/2007","2/2/2007"),]
+NEI <- readRDS("./exdata-data-NEI_data/summarySCC_PM25.rds")
 
-date <- strptime(paste(power_subset$Date, power_subset$Time, sep=" "), "%d/%m/%Y %H:%M:%S") 
-power_numeric_val <- as.numeric(power_subset$Global_active_power)
-png("plot2.png", width=480, height=480)
-plot(date, power_numeric_val, type = "S", main = "Global Active Power", xlab = "", ylab ="Global Active Power (kilowatts)")
+#  Filter Data based on fips = 24510
+filterdata <- NEI[NEI$fips == "24510",]
+
+agg1 <- aggregate(filterdata[c("Emissions")], list(year = filterdata$year), sum)
+
+# save the plot to plot2.png
+
+png('plot2.png')
+
+# Base plot the data based on year and Emissions.
+
+plot(agg1$year, agg1$Emissions, type = "l", 
+     main = "Total Emissions from PM2.5 in the Baltimore City",
+     xlab = "Year", ylab = "Emissions", col= "blue")
+
+dev.off()

@@ -1,6 +1,11 @@
-power <- read.table("household_power_consumption.txt", header=TRUE, sep=";", stringsAsFactors=FALSE)
-power_subset <- power[power$Date %in% c("1/2/2007","2/2/2007"),]
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
 
-power_numeric_val <- as.numeric(power_subset$Global_active_power)
-png("plot1.png", width=480, height=480)
-hist(power_numeric_val,col="red",main = "Global Active Power", xlab = "Global Active Power(Killowatts)")
+agg <- aggregate(NEI[c("Emissions")], list(year = NEI$year), sum)
+
+png('plot1.png')
+plot(agg$year, agg$Emissions, type = "l", 
+     main = "Total Emissions from PM2.5 in the US",
+     xlab = "Year", ylab = "Emissions", col= "red")
+
+dev.off()

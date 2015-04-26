@@ -1,28 +1,21 @@
-power <- read.table("household_power_consumption.txt", header=TRUE, sep=";", stringsAsFactors=FALSE)
-power_subset <- power[power$Date %in% c("1/2/2007","2/2/2007"),]
+#  Read Data 
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
 
-date <- strptime(paste(power_subset$Date, power_subset$Time, sep=" "), "%d/%m/%Y %H:%M:%S") 
+SCC.coal <- grep("coal", SCC$Short.Name, ignore.case = TRUE)
+SCC.coal <- SCC[SCC.coal, ]
+SCC.identifiers <- as.character(SCC.coal$SCC)
 
-active_power <- as.numeric(power_subset$Global_active_power)
+NEI$SCC <- as.character(NEI$SCC)
+NEI.coal <- NEI[NEI$SCC %in% SCC.identifiers, ]
 
-reactive_power <- as.numeric(power_subset$Global_reactive_power)
-volt <- as.numeric(power_subset$Voltage)
+aggregate.coal <- with(NEI.coal, aggregate(Emissions, by = list(year), sum))
+colnames(aggregate.coal) <- c("year", "Emissions")
 
-esm1 <- as.numeric(power_subset$Sub_metering_1)
-esm2 <- as.numeric(power_subset$Sub_metering_2)
-esm3 <- as.numeric(power_subset$Sub_metering_3)
+png('plot4.png', width=480, height=480)
 
-png("plot4.png", width=480, height=480)
+plot(aggregate.coal, type = "o", ylab = expression("Total Emissions, PM"[2.5]), 
+     xlab = "Year", main = "Emissions and Total Coal Combustion for the United States", 
+     xlim = c(1999, 2008))
 
-par(mfrow=c(2,2), mar=c(4,4,2,1), oma=c(0,0,2,0))
-
-with(power_subset, { plot( date, active_power, type = "S",  xlab = "", ylab ="Global Active Power")
-                     plot( date, volt, type = "S", xlab = "datetime", ylab ="Voltage")
-                     
-                     plot(date,esm1, type="S",
-                          ylab="Energy Sub Metering", xlab="")
-                     lines(date,esm2,col='Red')
-                     lines(date,esm3,col='Blue')
-                     legend ("topright", col=c("black","red","blue")  , lty=1, lwd=2, bty="n", c("Sub_metering_1","Sub_metering_2","Sub_metering_3") )
-                     plot( date, reactive_power, type = "S", xlab = "datetime", ylab ="Global_reactive_power")
-})
+dev.off()
